@@ -1,0 +1,39 @@
+syntax = "proto3";
+
+package go.micro.example.login;
+
+import "go/micro/gw/annotations.proto";
+
+service Login {
+    rpc Create(Request) returns (Response) {
+        option(go.micro.gw.http) = {
+            post: "/v1/login"
+            security: "basicAuth"
+            body: "*"
+        };
+    }
+
+    rpc Get(Request) returns (GetResponse) {
+        option(go.micro.gw.http) = {
+            get: "/v1/login"
+            security: "basicAuth"
+        };
+    }
+
+    option(go.micro.gw.security) = {
+        alias: "basicAuth"
+        type: "basic"
+    };
+}
+
+message Request {
+    string hello = 1;
+}
+
+message Response {
+    string jwt_token = 1;
+}
+
+message GetResponse {
+    string hello = 1;
+}

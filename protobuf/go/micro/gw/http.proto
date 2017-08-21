@@ -1,0 +1,33 @@
+syntax = "proto3";
+
+package go.micro.gw;
+
+option go_package = "github.com/ka2n/micro-gateway/protobuf/go/micro/gw";
+
+message Http {
+    repeated HttpRule rules = 1;    
+}
+
+message HttpRule {
+    string selector = 1;
+
+    oneof pattern {
+      string get = 2;
+      string put = 3;
+      string post = 4;
+      string delete = 5;
+      string patch = 6;
+    }
+
+    string body = 7;
+
+    string security = 9;
+}
+
+message SecurityScheme {
+    string alias = 1;
+    string type = 2;
+    string description = 3;
+    string name = 4;
+    string in = 5;
+}

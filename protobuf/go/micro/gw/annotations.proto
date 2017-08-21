@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package go.micro.gw;
+
+import "google/protobuf/descriptor.proto";
+import "go/micro/gw/http.proto";
+
+option go_package = "github.com/ka2n/micro-gateway/protobuf/go/micro/gw";
+
+extend google.protobuf.MethodOptions {
+    // See `HttpRule`.
+    HttpRule http = 82295728;
+}
+
+extend google.protobuf.ServiceOptions {
+    SecurityScheme security = 82295738;
+}

@@ -1,0 +1,29 @@
+syntax = "proto3";
+
+package go.micro.example.s1;
+
+import "go/micro/gw/annotations.proto";
+
+service Say {
+    rpc Hello(Request) returns (Response) {
+        option(go.micro.gw.http) = {
+            get: "/v1/service1/hello/{name}"
+            security: "jwt"
+        };
+    };
+
+    option(go.micro.gw.security) = {
+        alias: "jwt"
+        type: "apiKey"
+        in: "header"
+        name: "Authorization"
+    };
+}
+
+message Request {
+    string name = 1;
+}
+
+message Response {
+    string name = 1;
+}
