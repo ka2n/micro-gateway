@@ -9,7 +9,7 @@ Please note this project is just POC & very alpha quality now.
 
 - You can(must) choose what service to be exposed by gateway.
 - Generate swagger.json from `.proto` to generate clients.
-- Run authentication middleware in both gateway and service are supported.
+- [ ] Run authentication middleware in both gateway and service are supported.
 
 ## How to use
 

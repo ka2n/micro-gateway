@@ -11,9 +11,14 @@ import (
 	"github.com/micro/go-micro/selector"
 )
 
+// RequestToContext converts a *http.Request to context.Context
 func RequestToContext(r *http.Request) context.Context {
-	ctx := context.Background()
-	md := make(metadata.Metadata)
+	ctx := r.Context()
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		md = make(metadata.Metadata)
+	}
+
 	for k, v := range r.Header {
 		md[k] = strings.Join(v, ",")
 	}
