@@ -4,6 +4,8 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/micro/go-micro/errors"
+
 	"golang.org/x/net/context"
 
 	"github.com/micro/go-micro/metadata"
@@ -31,4 +33,12 @@ func Strategy(services []*registry.Service) selector.Strategy {
 		// ignore input to this function, use services above
 		return selector.Random(services)
 	}
+}
+
+func HTTPError(w http.ResponseWriter, err error) {
+	if microErr, ok := err.(*errors.Error); ok {
+		http.Error(w, microErr.Error(), int(microErr.Code))
+		return
+	}
+	http.Error(w, err.Error(), http.StatusInternalServerError)
 }
