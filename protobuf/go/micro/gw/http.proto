@@ -24,10 +24,15 @@ message HttpRule {
     string security = 9;
 }
 
+message SecurityRule {
+    repeated SecurityScheme scheme = 1;
+}
+
 message SecurityScheme {
     string alias = 1;
     string type = 2;
     string description = 3;
     string name = 4;
     string in = 5;
+    bool terminate = 6;    
 }

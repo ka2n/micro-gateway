@@ -36,6 +36,7 @@ func New(reg *descriptor.Registry) gen.Generator {
 		"github.com/grpc-ecosystem/grpc-gateway/runtime",
 		"github.com/grpc-ecosystem/grpc-gateway/utilities",
 		"github.com/ka2n/micro-gateway/runtime/helper",
+		"github.com/ka2n/micro-gateway/protobuf/go/micro/gw",		
 		"github.com/micro/go-micro/client",
 		"github.com/micro/go-micro/errors",
 		"github.com/micro/go-micro/selector",

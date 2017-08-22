@@ -131,8 +131,8 @@ func findServicesMessagesAndEnumerations(s []*descriptor.Service, reg *descripto
 			findNestedMessagesAndEnumerations(meth.ResponseType, reg, m, e)
 		}
 
-		for _, s := range svc.Securities {
-			sc[s.Alias] = s
+		for key, s := range svc.Securities {
+			sc[key] = s
 		}
 	}
 }

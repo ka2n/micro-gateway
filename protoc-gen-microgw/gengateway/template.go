@@ -188,20 +188,45 @@ var (
 
 	trailerTemplate = template.Must(template.New("trailer").Parse(`
 {{range $svc := .}}
+{{if $svc.Securities }}
+type {{$svc.GetName}}HTTPAuthHandler func(next client.CallFunc, scheme *gw.SecurityScheme) client.CallFunc
+
+var(
+	{{range $key, $sec := $svc.Securities }}
+		security_{{$key}} = &gw.SecurityScheme{Alias: "{{$key}}", Type: "{{$sec.Type}}", Description: "{{$sec.Description}}", Name: "{{$sec.Name}}", In: "{{$sec.In}}", Terminate: {{$sec.Terminate}}}
+	{{end}}
+)
+{{end}}
+
 // Register{{$svc.GetName}}HTTPHandler registers the http handlers for service {{$svc.GetName}} to "mux".
+{{if $svc.Securities}}
+func Register{{$svc.GetName}}HTTPHandler(ctx context.Context, mux *runtime.ServeMux, serviceName string, conn client.Client, auth {{$svc.GetName}}HTTPAuthHandler) error {
+{{else}}
 func Register{{$svc.GetName}}HTTPHandler(ctx context.Context, mux *runtime.ServeMux, serviceName string, conn client.Client) error {
+{{end}}
 	if len(serviceName) == 0 {
 		serviceName = "{{$svc.File.GetPackage}}"
 	}
 
-	copt := client.WithSelectOption(selector.WithStrategy(selector.Random))
+	opts := []client.CallOption{
+		client.WithSelectOption(selector.WithStrategy(selector.Random)),
+	}
 	
 	{{range $m := $svc.Methods}}
 	{{range $b := $m.Bindings}}
+
+	{{ if $b.Security }}
+	opts_{{$m.GetName}}_{{$b.Index}} := append(opts, client.WithCallWrapper(func(next client.CallFunc) client.CallFunc {
+		return auth(next, security_{{$b.Security}})
+	}))
+	{{else}}
+	opts_{{$m.GetName}}_{{$b.Index}} := opts
+	{{end}}
+
 	mux.Handle({{$b.HTTPMethod | printf "%q"}}, pattern_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}, func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		ctx := helper.RequestToContext(r)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, r)
-		resp, err := request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, inboundMarshaler, serviceName, conn, r, pathParams, copt)
+		resp, err := request_{{$svc.GetName}}_{{$m.GetName}}_{{$b.Index}}(ctx, inboundMarshaler, serviceName, conn, r, pathParams, opts_{{$m.GetName}}_{{$b.Index}}...)
 		if err != nil {
 			if err, ok := err.(*errors.Error); ok {
 				http.Error(w, err.Error(), int(err.Code))

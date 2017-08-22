@@ -13,5 +13,5 @@ extend google.protobuf.MethodOptions {
 }
 
 extend google.protobuf.ServiceOptions {
-    SecurityScheme security = 82295738;
+    SecurityRule security = 82295738;
 }

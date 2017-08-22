@@ -122,7 +122,7 @@ type Service struct {
 	*descriptor.ServiceDescriptorProto
 	// Methods is the list of methods defined in this service.
 	Methods    []*Method
-	Securities []*Security
+	Securities map[string]*Security
 }
 
 // Method wraps descriptor.MethodDescriptorProto for richer features.
@@ -170,11 +170,11 @@ func (b *Binding) ExplicitParams() []string {
 }
 
 type Security struct {
-	Alias       string
 	Type        string
 	Description string
 	Name        string
 	In          string
+	Terminate   bool
 }
 
 // Field wraps descriptor.FieldDescriptorProto for richer features.

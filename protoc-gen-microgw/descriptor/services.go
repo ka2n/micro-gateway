@@ -45,39 +45,47 @@ func (r *Registry) loadServices(file *File) error {
 			continue
 		}
 
-		newSecurity := func(opts *options.SecurityScheme) (*Security, error) {
-			alias := opts.GetAlias()
-			if alias == "" {
-				return nil, fmt.Errorf("alias is required")
-			}
+		newSecurity := func(opts *options.SecurityRule) (map[string]*Security, error) {
+			securities := make(map[string]*Security)
+			for _, scheme := range opts.GetScheme() {
+				var security *Security
 
-			desc := opts.GetDescription()
+				alias := scheme.GetAlias()
+				if alias == "" {
+					return nil, fmt.Errorf("alias is required in SecurityRule: %s", sd.GetName())
+				}
+				desc := scheme.GetDescription()
+				terminate := scheme.GetTerminate()
 
-			var (
-				name string
-				in   string
-			)
-			t := opts.GetType()
-			switch t {
-			case "basic":
-				return &Security{
-					Alias:       alias,
-					Description: desc,
-					Type:        "basic",
-				}, nil
-			case "apiKey":
-				name = opts.GetName()
-				in = opts.GetIn()
-				return &Security{
-					Alias:       alias,
-					Description: desc,
-					Type:        "apiKey",
-					Name:        name,
-					In:          in,
-				}, nil
-			default:
-				return nil, fmt.Errorf("No type specified in SecurityScheme: %s", sd.GetName())
+				var (
+					name string
+					in   string
+				)
+				t := scheme.GetType()
+				switch t {
+				case "basic":
+					security = &Security{
+						Description: desc,
+						Type:        "basic",
+						Terminate:   terminate,
+					}
+				case "apiKey":
+					name = scheme.GetName()
+					in = scheme.GetIn()
+					security = &Security{
+						Description: desc,
+						Type:        "apiKey",
+						Name:        name,
+						In:          in,
+						Terminate:   terminate,
+					}
+				default:
+					return nil, fmt.Errorf("No type specified in SecurityRule: %s", sd.GetName())
+				}
+
+				securities[alias] = security
 			}
+			return securities, nil
 		}
 
 		opts, err := extractServiceAPIOptions(sd)
@@ -89,7 +97,7 @@ func (r *Registry) loadServices(file *File) error {
 			if err != nil {
 				return err
 			}
-			svc.Securities = []*Security{s}
+			svc.Securities = s
 		}
 
 		glog.V(2).Infof("Registered %s with %d method(s)", svc.GetName(), len(svc.Methods))
@@ -232,7 +240,7 @@ func extractAPIOptions(meth *descriptor.MethodDescriptorProto) (*options.HttpRul
 	return opts, nil
 }
 
-func extractServiceAPIOptions(sd *descriptor.ServiceDescriptorProto) (*options.SecurityScheme, error) {
+func extractServiceAPIOptions(sd *descriptor.ServiceDescriptorProto) (*options.SecurityRule, error) {
 	if sd.Options == nil {
 		return nil, nil
 	}
@@ -243,7 +251,7 @@ func extractServiceAPIOptions(sd *descriptor.ServiceDescriptorProto) (*options.S
 	if err != nil {
 		return nil, err
 	}
-	opts, ok := ext.(*options.SecurityScheme)
+	opts, ok := ext.(*options.SecurityRule)
 	if !ok {
 		return nil, fmt.Errorf("extension is %T; want an SecurityScheme", ext)
 	}
