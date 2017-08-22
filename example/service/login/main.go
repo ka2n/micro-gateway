@@ -4,10 +4,7 @@ package main
 
 import (
 	"encoding/base64"
-	"fmt"
 	"strings"
-
-	"github.com/micro/go-micro/errors"
 
 	"github.com/micro/go-micro/metadata"
 
@@ -22,26 +19,22 @@ import (
 type handler struct{}
 
 func (h *handler) Create(ctx context.Context, req *proto.Request, resp *proto.Response) error {
-	fmt.Println(req.GetHello())
-	md, ok := metadata.FromContext(ctx)
-	if !ok {
-		return errors.BadRequest("go.micro.example.login", "invalid auth")
-	}
-
-	auth := md["Authorization"]
-	user, pass, ok := parseBasicAuth(auth)
-	if !ok || user != "admin" || pass != "password" {
-		return errors.BadRequest("go.micro.example.login", "invalid auth")
-	}
-
-	resp.JwtToken = "token" // TODO: generate token
+	user := userFromContext(ctx)
+	resp.JwtToken = user // TODO: generate token
 	return nil
 }
 
 func (h *handler) Get(ctx context.Context, req *proto.Request, resp *proto.GetResponse) error {
-	fmt.Println(req.GetHello())
-	resp.Hello = "OK!"
+	resp.Hello = "Hello " + userFromContext(ctx) + "!"
 	return nil
+}
+
+func userFromContext(ctx context.Context) string {
+	md, ok := metadata.FromContext(ctx)
+	if !ok {
+		return ""
+	}
+	return md["Userid"]
 }
 
 func parseBasicAuth(auth string) (username, password string, ok bool) {

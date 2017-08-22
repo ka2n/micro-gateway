@@ -15,14 +15,20 @@ service Login {
 
     rpc Get(Request) returns (GetResponse) {
         option(go.micro.gw.http) = {
-            get: "/v1/login"
-            security: "basicAuth"
+            get: "/v1/me"
+            security: "basicWithoutError"            
         };
     }
 
     option(go.micro.gw.security) = {
-        alias: "basicAuth"
-        type: "basic"
+        scheme: {
+            alias: "basicAuth"
+            type: "basic"    
+        };
+        scheme: {
+            alias: "basicWithoutError"
+            type: "basic"
+        }
     };
 }
 

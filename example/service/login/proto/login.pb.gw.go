@@ -17,6 +17,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
+	"github.com/ka2n/micro-gateway/protobuf/go/micro/gw"
 	"github.com/ka2n/micro-gateway/runtime/helper"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/errors"
@@ -84,18 +85,34 @@ func request_Login_Get_0(ctx context.Context, marshaler runtime.Marshaler, servi
 	return &response, nil
 }
 
+type LoginHTTPAuthHandler func(next client.CallFunc, scheme *gw.SecurityScheme) client.CallFunc
+
+var (
+	security_basicAuth = &gw.SecurityScheme{Alias: "basicAuth", Type: "basic", Description: "", Name: "", In: "", Terminate: false}
+
+	security_basicWithoutError = &gw.SecurityScheme{Alias: "basicWithoutError", Type: "basic", Description: "", Name: "", In: "", Terminate: false}
+)
+
 // RegisterLoginHTTPHandler registers the http handlers for service Login to "mux".
-func RegisterLoginHTTPHandler(ctx context.Context, mux *runtime.ServeMux, serviceName string, conn client.Client) error {
+
+func RegisterLoginHTTPHandler(ctx context.Context, mux *runtime.ServeMux, serviceName string, conn client.Client, auth LoginHTTPAuthHandler) error {
+
 	if len(serviceName) == 0 {
 		serviceName = "go.micro.example.login"
 	}
 
-	copt := client.WithSelectOption(selector.WithStrategy(selector.Random))
+	opts := []client.CallOption{
+		client.WithSelectOption(selector.WithStrategy(selector.Random)),
+	}
+
+	opts_Create_0 := append(opts, client.WithCallWrapper(func(next client.CallFunc) client.CallFunc {
+		return auth(next, security_basicAuth)
+	}))
 
 	mux.Handle("POST", pattern_Login_Create_0, func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		ctx := helper.RequestToContext(r)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, r)
-		resp, err := request_Login_Create_0(ctx, inboundMarshaler, serviceName, conn, r, pathParams, copt)
+		resp, err := request_Login_Create_0(ctx, inboundMarshaler, serviceName, conn, r, pathParams, opts_Create_0...)
 		if err != nil {
 			if err, ok := err.(*errors.Error); ok {
 				http.Error(w, err.Error(), int(err.Code))
@@ -110,10 +127,14 @@ func RegisterLoginHTTPHandler(ctx context.Context, mux *runtime.ServeMux, servic
 		w.Write(b)
 	})
 
+	opts_Get_0 := append(opts, client.WithCallWrapper(func(next client.CallFunc) client.CallFunc {
+		return auth(next, security_basicWithoutError)
+	}))
+
 	mux.Handle("GET", pattern_Login_Get_0, func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		ctx := helper.RequestToContext(r)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, r)
-		resp, err := request_Login_Get_0(ctx, inboundMarshaler, serviceName, conn, r, pathParams, copt)
+		resp, err := request_Login_Get_0(ctx, inboundMarshaler, serviceName, conn, r, pathParams, opts_Get_0...)
 		if err != nil {
 			if err, ok := err.(*errors.Error); ok {
 				http.Error(w, err.Error(), int(err.Code))
@@ -134,5 +155,5 @@ func RegisterLoginHTTPHandler(ctx context.Context, mux *runtime.ServeMux, servic
 var (
 	pattern_Login_Create_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "login"}, ""))
 
-	pattern_Login_Get_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "login"}, ""))
+	pattern_Login_Get_0 = runtime.MustPattern(runtime.NewPattern(1, []int{2, 0, 2, 1}, []string{"v1", "me"}, ""))
 )

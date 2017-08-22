@@ -13,10 +13,12 @@ service Say {
     };
 
     option(go.micro.gw.security) = {
-        alias: "jwt"
-        type: "apiKey"
-        in: "header"
-        name: "Authorization"
+        scheme {
+            alias: "jwt"
+            type: "apiKey"
+            in: "header"
+            name: "Authorization"    
+        }
     };
 }
 

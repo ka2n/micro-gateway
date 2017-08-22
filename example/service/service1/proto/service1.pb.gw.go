@@ -17,6 +17,7 @@ import (
 	"github.com/golang/protobuf/proto"
 	"github.com/grpc-ecosystem/grpc-gateway/runtime"
 	"github.com/grpc-ecosystem/grpc-gateway/utilities"
+	"github.com/ka2n/micro-gateway/protobuf/go/micro/gw"
 	"github.com/ka2n/micro-gateway/runtime/helper"
 	"github.com/micro/go-micro/client"
 	"github.com/micro/go-micro/errors"
@@ -67,18 +68,32 @@ func request_Say_Hello_0(ctx context.Context, marshaler runtime.Marshaler, servi
 	return &response, nil
 }
 
+type SayHTTPAuthHandler func(next client.CallFunc, scheme *gw.SecurityScheme) client.CallFunc
+
+var (
+	security_jwt = &gw.SecurityScheme{Type: "apiKey", Description: "", Name: "Authorization", In: "header", Terminate: false}
+)
+
 // RegisterSayHTTPHandler registers the http handlers for service Say to "mux".
-func RegisterSayHTTPHandler(ctx context.Context, mux *runtime.ServeMux, serviceName string, conn client.Client) error {
+
+func RegisterSayHTTPHandler(ctx context.Context, mux *runtime.ServeMux, serviceName string, conn client.Client, auth SayHTTPAuthHandler) error {
+
 	if len(serviceName) == 0 {
 		serviceName = "go.micro.example.s1"
 	}
 
-	copt := client.WithSelectOption(selector.WithStrategy(selector.Random))
+	opts := []client.CallOption{
+		client.WithSelectOption(selector.WithStrategy(selector.Random)),
+	}
+
+	opts_Hello_0 := append(opts, client.WithCallWrapper(func(next client.CallFunc) client.CallFunc {
+		return auth(next, security_jwt)
+	}))
 
 	mux.Handle("GET", pattern_Say_Hello_0, func(w http.ResponseWriter, r *http.Request, pathParams map[string]string) {
 		ctx := helper.RequestToContext(r)
 		inboundMarshaler, outboundMarshaler := runtime.MarshalerForRequest(mux, r)
-		resp, err := request_Say_Hello_0(ctx, inboundMarshaler, serviceName, conn, r, pathParams, copt)
+		resp, err := request_Say_Hello_0(ctx, inboundMarshaler, serviceName, conn, r, pathParams, opts_Hello_0...)
 		if err != nil {
 			if err, ok := err.(*errors.Error); ok {
 				http.Error(w, err.Error(), int(err.Code))

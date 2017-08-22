@@ -16,33 +16,6 @@
   ],
   "paths": {
     "/v1/login": {
-      "get": {
-        "operationId": "Get",
-        "responses": {
-          "200": {
-            "description": "",
-            "schema": {
-              "$ref": "#/definitions/loginGetResponse"
-            }
-          }
-        },
-        "parameters": [
-          {
-            "name": "hello",
-            "in": "query",
-            "required": false,
-            "type": "string"
-          }
-        ],
-        "security": [
-          {
-            "basicAuth": []
-          }
-        ],
-        "tags": [
-          "Login"
-        ]
-      },
       "post": {
         "operationId": "Create",
         "responses": {
@@ -66,6 +39,35 @@
         "security": [
           {
             "basicAuth": []
+          }
+        ],
+        "tags": [
+          "Login"
+        ]
+      }
+    },
+    "/v1/me": {
+      "get": {
+        "operationId": "Get",
+        "responses": {
+          "200": {
+            "description": "",
+            "schema": {
+              "$ref": "#/definitions/loginGetResponse"
+            }
+          }
+        },
+        "parameters": [
+          {
+            "name": "hello",
+            "in": "query",
+            "required": false,
+            "type": "string"
+          }
+        ],
+        "security": [
+          {
+            "basicWithoutError": []
           }
         ],
         "tags": [
@@ -102,6 +104,9 @@
   },
   "securityDefinitions": {
     "basicAuth": {
+      "type": "basic"
+    },
+    "basicWithoutError": {
       "type": "basic"
     }
   }
